@@ -1,4 +1,4 @@
-import { Err, Ok, Result, ResultAsync } from "neverthrow";
+import { Err, Ok, Result } from "neverthrow";
 import { Simplify } from "type-fest";
 import { UserData, UserID, UsersData } from "@/types/user";
 import {
@@ -11,11 +11,14 @@ import {
   ValidationData,
   NotExistsError,
   NotExistsErrorData,
-  RepositoryErrorData,
   ValidationError,
   ValidationErrorData,
+  SystemError,
 } from "@/repository/common";
 import { Session } from "@/types/session";
+import { Chance } from "chance";
+
+const isSystemError = () => Chance().bool();
 
 const data = [
   {
@@ -139,6 +142,14 @@ export class UserFactory implements UserRepository {
       return new Err(resultValidateArgument.error);
     }
 
+    if (isSystemError()) {
+      return new Err(
+        new SystemError(`システムエラーが起きました`, {
+          cause: new Error("Something went wrong..."),
+        })
+      );
+    }
+
     return new Ok(data);
   }
 
@@ -161,6 +172,14 @@ export class UserFactory implements UserRepository {
 
     if (resultCheckExists.isErr()) {
       return new Err(resultCheckExists.error);
+    }
+
+    if (isSystemError()) {
+      return new Err(
+        new SystemError(`システムエラーが起きました`, {
+          cause: new Error("Something went wrong..."),
+        })
+      );
     }
 
     return new Ok(data.find((d) => d.id === userId));
